@@ -68,20 +68,9 @@ python main.py @channel_name --format images --output ./downloads
 - `--format` or `-f`: The file type to download (e.g., `images`, `pdf`). If omitted, all file types are downloaded.
 - `--output` or `-o`: The directory to save the files. Defaults to the current directory.
 
-## Automating Authentication
-
-To streamline authentication, modify the script as follows:
-
-```python
-client = TelegramClient('session_name', API_ID, API_HASH).start()
-```
-
-This will prompt for the phone number and code (or bot token) if no session exists and use the saved session for future runs.
-
 ## Security Notes
 
 - Avoid sharing the .env file.
-
 - Avoid sharing the `session_name.session` file, as it contains encrypted data that could potentially be misused to access your account.
 
 ## Contributing
