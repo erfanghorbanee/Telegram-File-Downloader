@@ -19,6 +19,9 @@ def download_files(channel_id, file_format=None, output_dir="."):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
+    total_size = 0
+    file_count = 0
+
     with client:
         print(f"Fetching messages from channel: {channel_id}")
         messages = client.iter_messages(channel_id)
@@ -31,7 +34,10 @@ def download_files(channel_id, file_format=None, output_dir="."):
                         file_path = os.path.join(output_dir, filename)
                         if not os.path.exists(file_path):
                             file_path = client.download_media(message, file=file_path)
-                            print(f"Downloaded image: {file_path}")
+                            if file_path:
+                                total_size += os.path.getsize(file_path)
+                                file_count += 1
+                                print(f"Downloaded image: {file_path}")
                         else:
                             print(f"Image already exists: {file_path}")
 
@@ -49,11 +55,18 @@ def download_files(channel_id, file_format=None, output_dir="."):
                     ):
                         if not os.path.exists(file_path):
                             file_path = client.download_media(message, file=file_path)
-                            print(
-                                f"Downloaded {extension if extension else 'file'}: {file_path}"
-                            )
+                            if file_path:
+                                total_size += os.path.getsize(file_path)
+                                file_count += 1
+                                print(
+                                    f"Downloaded {extension if extension else 'file'}: {file_path}"
+                                )
                         else:
                             print(f"File already exists: {file_path}")
+
+    print(f"\nSummary:")
+    print(f"Total files downloaded: {file_count}")
+    print(f"Total size of downloaded files: {total_size / (1024 * 1024):.2f} MB")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
