@@ -14,6 +14,15 @@ API_HASH = os.getenv("TELEGRAM_API_HASH")
 # Initialize the Telegram client
 client = TelegramClient("session_name", API_ID, API_HASH)
 
+# Supported file types
+SUPPORTED_FILE_TYPES = {
+    "images": ["jpg", "jpeg", "png", "gif", "bmp"],
+    "documents": ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"],
+    "videos": ["mp4", "mkv", "avi", "mov", "wmv"],
+    "audios": ["mp3", "wav", "aac", "flac", "ogg"],
+    "archives": ["zip", "rar", "7z", "tar", "gz"],
+}
+
 # Function to download files
 def download_files(channel_id, file_format=None, output_dir="."):
     if not os.path.exists(output_dir):
@@ -29,8 +38,8 @@ def download_files(channel_id, file_format=None, output_dir="."):
         for message in messages:
             if message.media:
                 if isinstance(message.media, MessageMediaPhoto):
-                    if not file_format or file_format.lower() in ["image", "images"]:
-                        filename = message.id + ".jpg"
+                    if not file_format or file_format.lower() == "images":
+                        filename = f"{message.id}.jpg"
                         file_path = os.path.join(output_dir, filename)
                         if not os.path.exists(file_path):
                             file_path = client.download_media(message, file=file_path)
@@ -50,8 +59,13 @@ def download_files(channel_id, file_format=None, output_dir="."):
 
                     file_path = os.path.join(output_dir, filename)
 
-                    if not file_format or (
-                        extension and file_format.lower() in extension.lower()
+                    if (
+                        not file_format
+                        or (
+                            file_format.lower() in SUPPORTED_FILE_TYPES
+                            and extension.lstrip(".") in SUPPORTED_FILE_TYPES[file_format.lower()]
+                        )
+                        or extension.lstrip(".") == file_format.lower()
                     ):
                         if not os.path.exists(file_path):
                             file_path = client.download_media(message, file=file_path)
@@ -79,7 +93,8 @@ if __name__ == "__main__":
         "-f",
         "--format",
         type=str,
-        help="The type of files to download (e.g., images, pdf, etc.). If not specified, downloads all media.",
+        help=f"The type of files to download. Supported types: {', '.join(SUPPORTED_FILE_TYPES.keys())} "
+        f"or specific extensions (e.g., pdf, jpg). If not specified, downloads all media.",
     )
     parser.add_argument(
         "-o",
@@ -90,6 +105,16 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+
+    # Validate the file format if provided
+    if args.format and args.format.lower() not in SUPPORTED_FILE_TYPES.keys():
+        valid_extensions = {ext for types in SUPPORTED_FILE_TYPES.values() for ext in types}
+        if args.format.lower() not in valid_extensions:
+            print(
+                f"Error: Unsupported file format '{args.format}'.\n"
+                f"Supported formats are: {', '.join(SUPPORTED_FILE_TYPES.keys())} or specific extensions: {', '.join(valid_extensions)}."
+            )
+            exit(1)
 
     try:
         download_files(args.channel, args.format, args.output)
