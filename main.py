@@ -1,6 +1,7 @@
 import argparse
 import os
 from mimetypes import guess_extension
+
 from dotenv import load_dotenv
 from telethon import TelegramClient, sync
 from telethon.tl.types import MessageMediaPhoto
@@ -11,7 +12,7 @@ load_dotenv()
 API_ID = os.getenv("TELEGRAM_API_ID")
 API_HASH = os.getenv("TELEGRAM_API_HASH")
 
-# Initialize the Telegram client
+# Initialize the Telegram client with a session name to save the session data
 client = TelegramClient("session_name", API_ID, API_HASH)
 
 # Supported file types
@@ -23,7 +24,21 @@ SUPPORTED_FILE_TYPES = {
     "archives": ["zip", "rar", "7z", "tar", "gz"],
 }
 
-# Function to download files
+
+def download_files(channel_id, file_format=None, output_dir="."):
+    """
+    Downloads files from a specified Telegram channel.
+
+    Parameters:
+    channel_id (str): The username or ID of the Telegram channel.
+    file_format (str, optional): The type of files to download. Defaults to None.
+    output_dir (str, optional): The directory to save downloaded files. Defaults to the current directory.
+
+        messages = client.get_messages(channel_id, limit=None)
+    None
+    """
+
+
 def download_files(channel_id, file_format=None, output_dir="."):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -63,7 +78,8 @@ def download_files(channel_id, file_format=None, output_dir="."):
                         not file_format
                         or (
                             file_format.lower() in SUPPORTED_FILE_TYPES
-                            and extension.lstrip(".") in SUPPORTED_FILE_TYPES[file_format.lower()]
+                            and extension.lstrip(".")
+                            in SUPPORTED_FILE_TYPES[file_format.lower()]
                         )
                         or extension.lstrip(".") == file_format.lower()
                     ):
@@ -81,6 +97,7 @@ def download_files(channel_id, file_format=None, output_dir="."):
     print(f"\nSummary:")
     print(f"Total files downloaded: {file_count}")
     print(f"Total size of downloaded files: {total_size / (1024 * 1024):.2f} MB")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -108,7 +125,9 @@ if __name__ == "__main__":
 
     # Validate the file format if provided
     if args.format and args.format.lower() not in SUPPORTED_FILE_TYPES.keys():
-        valid_extensions = {ext for types in SUPPORTED_FILE_TYPES.values() for ext in types}
+        valid_extensions = {
+            ext for types in SUPPORTED_FILE_TYPES.values() for ext in types
+        }
         if args.format.lower() not in valid_extensions:
             print(
                 f"Error: Unsupported file format '{args.format}'.\n"
