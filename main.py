@@ -67,7 +67,7 @@ def download_files(channel_id, file_format=None, output_dir="."):
 
                 elif message.file:
                     mime_type = message.file.mime_type
-                    extension = guess_extension(mime_type) if mime_type else ""
+                    extension = guess_extension(mime_type) if mime_type else None
                     filename = message.file.name or str(message.id)
                     if extension and not filename.endswith(extension):
                         filename += extension
@@ -78,10 +78,10 @@ def download_files(channel_id, file_format=None, output_dir="."):
                         not file_format
                         or (
                             file_format.lower() in SUPPORTED_FILE_TYPES
-                            and extension.lstrip(".")
-                            in SUPPORTED_FILE_TYPES[file_format.lower()]
+                            and extension is not None
+                            and extension.lstrip(".") in SUPPORTED_FILE_TYPES[file_format.lower()]
                         )
-                        or extension.lstrip(".") == file_format.lower()
+                        or (extension is not None and extension.lstrip(".") == file_format.lower())
                     ):
                         if not os.path.exists(file_path):
                             file_path = client.download_media(message, file=file_path)
@@ -93,6 +93,7 @@ def download_files(channel_id, file_format=None, output_dir="."):
                                 )
                         else:
                             print(f"File already exists: {file_path}")
+
 
     print(f"\nSummary:")
     print(f"Total files downloaded: {file_count}")
