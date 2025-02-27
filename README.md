@@ -58,15 +58,16 @@ The first time you run the script, Telethon will authenticate your account to cr
 
 Telethon saves this authentication data in a `session_name.session` file in the current directory. This session file allows you to skip authentication on subsequent runs.
 
-### Example of Running the Script
+### **Example of Running the Script**
 
 ```bash
-python main.py @channel_name --format images --output ./downloads
+python main.py @channel_name --format images --output ./downloads --limit 100
 ```
 
 - `@channel_name`: The username or ID of the Telegram channel.
 - `--format` or `-f`: The file type to download (e.g., `images`, `pdf`). If omitted, all file types are downloaded.
 - `--output` or `-o`: The directory to save the files. Defaults to the current directory.
+- `--limit` or `-l`: The maximum number of messages to fetch. Use `0` to fetch **all messages**.
 
 ## Security Notes
 
