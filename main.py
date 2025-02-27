@@ -94,7 +94,7 @@ def download_channel_files(channel_name, file_type=None, save_directory=".", mes
                             total_file_size += file_size
                             total_files_downloaded += 1
 
-    logging.info(f"\nSummary: Total files downloaded: {total_files_downloaded}, Total size: {total_file_size / (1024 * 1024):.2f} MB")
+    logging.info(f"\n\nSummary:\nTotal files downloaded: {total_files_downloaded}\nTotal size: {total_file_size / (1024 * 1024):.2f} MB")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
