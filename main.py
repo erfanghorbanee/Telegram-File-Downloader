@@ -1,5 +1,6 @@
 import argparse
 import os
+import logging
 from mimetypes import guess_extension
 
 from dotenv import load_dotenv
@@ -14,6 +15,9 @@ API_HASH = os.getenv("TELEGRAM_API_HASH")
 
 # Initialize the Telegram client with a session name to save the session data
 client = TelegramClient("session_name", API_ID, API_HASH)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Supported file types
 SUPPORTED_FILE_TYPES = {
@@ -30,13 +34,17 @@ def ensure_directory_exists(directory):
         os.makedirs(directory)
 
 def check_and_download_file(message, file_path):
-    """Checks if the file exists and downloads it if not."""
-    if not os.path.exists(file_path):
-        file_path = client.download_media(message, file=file_path)
-        if file_path:
-            return file_path, os.path.getsize(file_path)
-    else:
-        print(f"File already exists: {file_path}")
+    """Checks if the file exists and downloads it if not, with logging and error handling."""
+    try:
+        if not os.path.exists(file_path):
+            file_path = client.download_media(message, file=file_path)
+            if file_path:
+                logging.info(f"Downloaded: {file_path}")
+                return file_path, os.path.getsize(file_path)
+        else:
+            logging.info(f"File already exists: {file_path}")
+    except Exception as e:
+        logging.error(f"Failed to download file: {e}")
     return None, 0
 
 def download_files(channel_id, file_format=None, output_dir=".", limit=100):
@@ -47,7 +55,7 @@ def download_files(channel_id, file_format=None, output_dir=".", limit=100):
     limit = None if limit == 0 else limit
 
     with client:
-        print(f"Fetching messages from channel: {channel_id}")
+        logging.info(f"Fetching messages from channel: {channel_id}")
         messages = client.iter_messages(channel_id, limit=limit)
 
         for message in messages:
@@ -60,7 +68,6 @@ def download_files(channel_id, file_format=None, output_dir=".", limit=100):
                         if downloaded_file:
                             total_size += size
                             file_count += 1
-                            print(f"Downloaded image: {downloaded_file}")
 
                 elif message.file:
                     mime_type = message.file.mime_type
@@ -84,11 +91,8 @@ def download_files(channel_id, file_format=None, output_dir=".", limit=100):
                         if downloaded_file:
                             total_size += size
                             file_count += 1
-                            print(f"Downloaded {extension if extension else 'file'}: {downloaded_file}")
 
-    print(f"\nSummary:")
-    print(f"Total files downloaded: {file_count}")
-    print(f"Total size of downloaded files: {total_size / (1024 * 1024):.2f} MB")
+    logging.info(f"\nSummary: Total files downloaded: {file_count}, Total size: {total_size / (1024 * 1024):.2f} MB")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -127,7 +131,7 @@ if __name__ == "__main__":
             ext for types in SUPPORTED_FILE_TYPES.values() for ext in types
         }
         if args.format.lower() not in valid_extensions:
-            print(
+            logging.error(
                 f"Error: Unsupported file format '{args.format}'.\n"
                 f"Supported formats are: {', '.join(SUPPORTED_FILE_TYPES.keys())} or specific extensions: {', '.join(valid_extensions)}."
             )
@@ -136,4 +140,4 @@ if __name__ == "__main__":
     try:
         download_files(args.channel, args.format, args.output, args.limit)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.error(f"An error occurred: {e}")
