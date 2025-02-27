@@ -47,16 +47,17 @@ def check_and_download_file(message, file_path):
         logging.error(f"Failed to download file: {e}")
     return None, 0
 
-def download_files(channel_id, file_format=None, output_dir=".", limit=100):
+def download_files(channel_id, file_format=None, output_dir=".", message_limit=100):
     ensure_directory_exists(output_dir)
     
     total_size = 0
     file_count = 0
-    limit = None if limit == 0 else limit
+    # Setting message_limit to None fetches all messages if 0 is provided
+    message_limit = None if message_limit == 0 else message_limit
 
     with client:
         logging.info(f"Fetching messages from channel: {channel_id}")
-        messages = client.iter_messages(channel_id, limit=limit)
+        messages = client.iter_messages(channel_id, limit=message_limit)
 
         for message in messages:
             if message.media:
