@@ -24,25 +24,14 @@ SUPPORTED_FILE_TYPES = {
     "archives": ["zip", "rar", "7z", "tar", "gz"],
 }
 
+def ensure_directory_exists(directory):
+    """Creates the directory if it does not exist."""
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
 def download_files(channel_id, file_format=None, output_dir="."):
-    """
-    Downloads files from a specified Telegram channel.
-
-    Parameters:
-    channel_id (str): The username or ID of the Telegram channel.
-    file_format (str, optional): The type of files to download. Defaults to None.
-    output_dir (str, optional): The directory to save downloaded files. Defaults to the current directory.
-
-        messages = client.get_messages(channel_id, limit=None)
-    None
-    """
-
-
-def download_files(channel_id, file_format=None, output_dir="."):
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
+    ensure_directory_exists(output_dir)
+    
     total_size = 0
     file_count = 0
 
@@ -94,11 +83,9 @@ def download_files(channel_id, file_format=None, output_dir="."):
                         else:
                             print(f"File already exists: {file_path}")
 
-
     print(f"\nSummary:")
     print(f"Total files downloaded: {file_count}")
     print(f"Total size of downloaded files: {total_size / (1024 * 1024):.2f} MB")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
