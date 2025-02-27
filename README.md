@@ -58,6 +58,16 @@ The first time you run the script, Telethon will authenticate your account to cr
 
 Telethon saves this authentication data in a `session_name.session` file in the current directory. This session file allows you to skip authentication on subsequent runs.
 
+**Note**: If you use a bot token instead of a phone number, you may encounter the following error:
+
+```bash
+ERROR - An error occurred: The API access for bot users is restricted. The method you tried to invoke cannot be executed as a bot (caused by GetHistoryRequest)
+```
+
+This error occurs because Telegram bots have limited API access. Bots cannot retrieve messages from channels using `GetHistoryRequest` (which `iter_messages()` depends on) unless they have specific permissions.
+
+If your goal is to download files from a Telegram channel, using a user account (phone number login) is the most reliable option. 
+
 ### **Example of Running the Script**
 
 ```bash
