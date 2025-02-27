@@ -29,15 +29,16 @@ def ensure_directory_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def download_files(channel_id, file_format=None, output_dir="."):
+def download_files(channel_id, file_format=None, output_dir=".", limit=100):
     ensure_directory_exists(output_dir)
     
     total_size = 0
     file_count = 0
+    limit = None if limit == 0 else limit
 
     with client:
         print(f"Fetching messages from channel: {channel_id}")
-        messages = client.iter_messages(channel_id)
+        messages = client.iter_messages(channel_id, limit=limit)
 
         for message in messages:
             if message.media:
@@ -108,6 +109,13 @@ if __name__ == "__main__":
         default=".",
         help="The directory to save downloaded files. Defaults to the current directory.",
     )
+    parser.add_argument(
+        "-l",
+        "--limit",
+        type=int,
+        default=100,
+        help="The maximum number of messages to fetch. Use 0 for no limit. Defaults to 100."
+    )
 
     args = parser.parse_args()
 
@@ -124,6 +132,6 @@ if __name__ == "__main__":
             exit(1)
 
     try:
-        download_files(args.channel, args.format, args.output)
+        download_files(args.channel, args.format, args.output, args.limit)
     except Exception as e:
         print(f"An error occurred: {e}")
