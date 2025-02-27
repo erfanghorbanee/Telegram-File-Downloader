@@ -72,6 +72,10 @@ def download_files(channel_id, file_format=None, output_dir=".", limit=100):
                 elif message.file:
                     mime_type = message.file.mime_type
                     extension = guess_extension(mime_type) if mime_type else None
+                    # Ensure `guess_extension()` does not return None before appending
+                    if extension is None:
+                        extension = ""
+                    
                     filename = message.file.name or str(message.id)
                     if extension and not filename.endswith(extension):
                         filename += extension
@@ -82,10 +86,9 @@ def download_files(channel_id, file_format=None, output_dir=".", limit=100):
                         not file_format
                         or (
                             file_format.lower() in SUPPORTED_FILE_TYPES
-                            and extension is not None
-                            and extension.lstrip(".") in SUPPORTED_FILE_TYPES[file_format.lower()]
+                            and extension.lstrip(".") in SUPPORTED_FILE_TYPES.get(file_format.lower(), [])
                         )
-                        or (extension is not None and extension.lstrip(".") == file_format.lower())
+                        or (extension.lstrip(".") == file_format.lower())
                     ):
                         downloaded_file, size = check_and_download_file(message, file_path)
                         if downloaded_file:
