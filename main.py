@@ -29,6 +29,16 @@ def ensure_directory_exists(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
+def check_and_download_file(message, file_path):
+    """Checks if the file exists and downloads it if not."""
+    if not os.path.exists(file_path):
+        file_path = client.download_media(message, file=file_path)
+        if file_path:
+            return file_path, os.path.getsize(file_path)
+    else:
+        print(f"File already exists: {file_path}")
+    return None, 0
+
 def download_files(channel_id, file_format=None, output_dir=".", limit=100):
     ensure_directory_exists(output_dir)
     
@@ -46,14 +56,11 @@ def download_files(channel_id, file_format=None, output_dir=".", limit=100):
                     if not file_format or file_format.lower() == "images":
                         filename = f"{message.id}.jpg"
                         file_path = os.path.join(output_dir, filename)
-                        if not os.path.exists(file_path):
-                            file_path = client.download_media(message, file=file_path)
-                            if file_path:
-                                total_size += os.path.getsize(file_path)
-                                file_count += 1
-                                print(f"Downloaded image: {file_path}")
-                        else:
-                            print(f"Image already exists: {file_path}")
+                        downloaded_file, size = check_and_download_file(message, file_path)
+                        if downloaded_file:
+                            total_size += size
+                            file_count += 1
+                            print(f"Downloaded image: {downloaded_file}")
 
                 elif message.file:
                     mime_type = message.file.mime_type
@@ -73,16 +80,11 @@ def download_files(channel_id, file_format=None, output_dir=".", limit=100):
                         )
                         or (extension is not None and extension.lstrip(".") == file_format.lower())
                     ):
-                        if not os.path.exists(file_path):
-                            file_path = client.download_media(message, file=file_path)
-                            if file_path:
-                                total_size += os.path.getsize(file_path)
-                                file_count += 1
-                                print(
-                                    f"Downloaded {extension if extension else 'file'}: {file_path}"
-                                )
-                        else:
-                            print(f"File already exists: {file_path}")
+                        downloaded_file, size = check_and_download_file(message, file_path)
+                        if downloaded_file:
+                            total_size += size
+                            file_count += 1
+                            print(f"Downloaded {extension if extension else 'file'}: {downloaded_file}")
 
     print(f"\nSummary:")
     print(f"Total files downloaded: {file_count}")
