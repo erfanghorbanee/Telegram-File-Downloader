@@ -66,7 +66,7 @@ ERROR - An error occurred: The API access for bot users is restricted. The metho
 
 This error occurs because Telegram bots have limited API access. Bots cannot retrieve messages from channels using `GetHistoryRequest` (which `iter_messages()` depends on) unless they have specific permissions.
 
-If your goal is to download files from a Telegram channel, using a user account (phone number login) is the most reliable option. 
+If your goal is to download files from a Telegram channel, using a user account (phone number login) is the most reliable option.
 
 ### **Example of Running the Script**
 
