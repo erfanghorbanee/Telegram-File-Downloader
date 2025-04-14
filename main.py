@@ -53,10 +53,15 @@ def check_and_download_file(message, file_path):
         # Download the file as a .tmp file first
         downloaded_file = telegram_client.download_media(message, file=temp_file_path)
 
-        if downloaded_file:
-            os.rename(temp_file_path, file_path)  # Rename only if download is successful
+        # Validate file size before renaming to ensure download was successful
+        if downloaded_file and os.path.exists(temp_file_path) and os.path.getsize(temp_file_path) > 0:
+            os.rename(temp_file_path, file_path)
             logging.info(f"Downloaded: {file_path}")
             return file_path, os.path.getsize(file_path)
+        else:
+            logging.warning(f"Downloaded file is incomplete or missing: {temp_file_path}")
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
     except Exception as error:
         logging.error(f"Failed to download file: {error}")
     return None, 0
