@@ -86,7 +86,7 @@ This will display a table with:
 **Basic syntax:**
 
 ```shell
-python main.py <entity_identifier> --format <file_type> --output <directory> --limit <number>
+python main.py <entity> --format <file_type> --output <directory> --limit <number>
 ```
 
 **Examples:**
@@ -96,10 +96,13 @@ python main.py <entity_identifier> --format <file_type> --output <directory> --l
 python main.py @channel_name --format images --output ./downloads --limit 100
 
 # Download from your Saved Messages
-python main.py me --format images --output ./downloads --limit 100
+python main.py me --format videos --output ./downloads --limit 100
 
 # Download from a private channel, private group or user chat using its ID
 python main.py -1001234567891 --format images --output ./downloads --limit 100
+
+# Download a specific file type (pdf)
+python main.py @channel_name --format pdf --output ./downloads --limit 0
 
 # Download all media types (no filter)
 python main.py @channel_name --output ./downloads --limit 0
