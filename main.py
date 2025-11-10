@@ -83,15 +83,23 @@ def list_dialogs():
     """List all accessible dialogs (channels, groups, chats) with their details."""
     with telegram_client:
         logging.info("Fetching your dialogs...")
-        print(f"\n{'ID':<15} {'Type':<20} {'Name':<30} {'Username':<20}")
-        print("-" * 85)
+        print(f"\n{'ID':<15} {'Type':<25} {'Name':<30} {'Username':<20}")
+        print("-" * 90)
         for dialog in telegram_client.iter_dialogs():
             dialog_id = dialog.id
             dialog_type = type(dialog.entity).__name__
             dialog_name = dialog.name or "(No name)"
             dialog_username = getattr(dialog.entity, "username", "") or "(No username)"
+
+            # Check if it's a channel and whether it's public or private
+            if dialog_type == "Channel":
+                if hasattr(dialog.entity, "username") and dialog.entity.username:
+                    dialog_type = "Channel (public)"
+                else:
+                    dialog_type = "Channel (private)"
+
             print(
-                f"{dialog_id:<15} {dialog_type:<20} {dialog_name:<30} {dialog_username:<20}"
+                f"{dialog_id:<15} {dialog_type:<25} {dialog_name:<30} {dialog_username:<20}"
             )
 
 
