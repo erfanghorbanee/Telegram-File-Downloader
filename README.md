@@ -1,12 +1,32 @@
 # Telegram-File-Downloader
 
-A Python script to download files from a given Telegram channel. It supports filtering by file type (e.g., images, PDFs).
+A Python script to download files from Telegram entities (channels, groups, chats, or saved messages). It supports filtering by file type (e.g., images, PDFs).
+
+## Table of Contents
+
+- [Telegram-File-Downloader](#telegram-file-downloader)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Prerequisites](#prerequisites)
+    - [Steps to Get Telegram API Credentials](#steps-to-get-telegram-api-credentials)
+    - [Setting Up the .env File](#setting-up-the-env-file)
+  - [Usage](#usage)
+    - [List All Accessible Dialogs](#list-all-accessible-dialogs)
+    - [Download Files](#download-files)
+  - [Security Notes](#security-notes)
+  - [FAQ](#faq)
+    - [What is a Telegram Entity?](#what-is-a-telegram-entity)
+    - [How do I find the ID of a private channel or group?](#how-do-i-find-the-id-of-a-private-channel-or-group)
+    - [Can I use a bot token instead of my phone number?](#can-i-use-a-bot-token-instead-of-my-phone-number)
+    - [What file formats are supported?](#what-file-formats-are-supported)
+  - [Contributing](#contributing)
 
 ## Features
 
-- Download all files from a specified Telegram channel.
+- Download files from channels, groups, private chats, or your saved messages.
 - Filter downloads by file type (e.g., images, PDFs, videos).
 - Save files to a specific directory.
+- List all channels, groups, and chats you have access to.
 - Easy setup with environment variables for secure credential management.
 
 ## Prerequisites
@@ -20,7 +40,7 @@ A Python script to download files from a given Telegram channel. It supports fil
 
 3. A Telegram account or bot token.
 
-## Steps to Get Telegram API Credentials
+### Steps to Get Telegram API Credentials
 
 To use this script, you need an **API ID** and **API Hash** from Telegram. Follow these steps:
 
@@ -30,7 +50,7 @@ To use this script, you need an **API ID** and **API Hash** from Telegram. Follo
 4. Fill in the required details.
 5. After creating the application, you will see your **API ID** and **API Hash**. Copy these values.
 
-## Setting Up the .env File
+### Setting Up the .env File
 
 To securely store your credentials:
 
@@ -44,45 +64,93 @@ To securely store your credentials:
 
    Replace `your_api_id` and `your_api_hash` with the actual values obtained from Telegram.
 
-## Why Does Telethon Ask for a Phone Number or Bot Token?
+## Usage
 
-The first time you run the script, Telethon will authenticate your account to create a session. You can authenticate using:
+### List All Accessible Dialogs
 
-1. **Phone Number**:
-   - Telethon sends a code to your Telegram app or via SMS.
-   - Enter this code in the terminal when prompted.
+To see all channels, groups, and chats you have access to:
 
-2. **Bot Token**:
-   - If you're using a bot, you can authenticate with the bot token instead of a phone number.
-   - Obtain the bot token from [BotFather](https://t.me/botfather).
-
-Telethon saves this authentication data in a `session_name.session` file in the current directory. This session file allows you to skip authentication on subsequent runs.
-
-**Note**: If you use a bot token instead of a phone number, you may encounter the following error:
-
-```bash
-ERROR - An error occurred: The API access for bot users is restricted. The method you tried to invoke cannot be executed as a bot (caused by GetHistoryRequest)
+```shell
+python main.py --list
 ```
 
-This error occurs because Telegram bots have limited API access. Bots cannot retrieve messages from channels using `GetHistoryRequest` (which `iter_messages()` depends on) unless they have specific permissions.
+This will display a table with:
 
-If your goal is to download files from a Telegram channel, using a user account (phone number login) is the most reliable option.
+- **ID**: The numeric identifier of the entity
+- **Type**: The type of entity (Channel (public/private), User, Chat, etc.)
+- **Name**: The display name
+- **Username**: The public username (if available)
 
-### **Usage**
+### Download Files
 
-```bash
+**Basic syntax:**
+
+```shell
+python main.py <entity_identifier> --format <file_type> --output <directory> --limit <number>
+```
+
+**Examples:**
+
+```shell
+# Download from a public channel
 python main.py @channel_name --format images --output ./downloads --limit 100
+
+# Download from your Saved Messages
+python main.py me --format images --output ./downloads --limit 100
+
+# Download from a private channel, private group or user chat using its ID
+python main.py -1001234567891 --format images --output ./downloads --limit 100
+
+# Download all media types (no filter)
+python main.py @channel_name --output ./downloads --limit 0
 ```
 
-- `@channel_name`: The username or ID of the Telegram channel. Use `me` or `self` to download from your **Saved Messages**.
-- `--format` or `-f`: The file type to download (e.g., `images`, `pdf`). If omitted, all file types are downloaded.
+**Arguments:**
+
+- `<entity>`: The entity to download from. Can be:
+  - Public channel username: `@channel_name` or `channel_name`
+  - Entity ID: `-1001234567891` (use `--list` to find IDs)
+  - Saved Messages: `me` or `self`
+- `--format` or `-f`: The file type to download (e.g., `images`, `pdf`, `mp4`). If omitted, all file types are downloaded.
 - `--output` or `-o`: The directory to save downloaded files. Defaults to the current directory.
-- `--limit` or `-l`: The maximum number of messages to fetch. Use `0` to fetch **all messages**.
+- `--limit` or `-l`: The maximum number of messages to fetch. Use `0` to fetch **all messages**. Defaults to 100.
 
 ## Security Notes
 
 - Avoid sharing the .env file.
 - Avoid sharing the `session_name.session` file, as it contains encrypted data that could potentially be misused to access your account.
+
+## FAQ
+
+### What is a Telegram Entity?
+
+The Telethon library widely uses the concept of “entities”. An entity will refer to any User, Chat or Channel object that the API may return in response to certain methods, such as GetUsersRequest.
+
+**Learn more:** [Telethon Entities Documentation](https://docs.telethon.dev/en/stable/concepts/entities.html)
+
+### How do I find the ID of a private channel or group?
+
+Use the `--list` command to see all your accessible dialogs with their IDs:
+
+```bash
+python main.py --list
+```
+
+**Note:** You must be a member of the channel/group or have an existing chat with the user to download files.
+
+### Can I use a bot token instead of my phone number?
+
+No. Telegram bots have restricted API access and cannot retrieve message history from channels using the methods this script requires (`iter_messages`). You must use a user account (phone number authentication) for this script to work properly.
+
+### What file formats are supported?
+
+You can filter by category or specific extension:
+
+**Categories:** `images`, `documents`, `videos`, `audios`, `archives`
+
+**Specific extensions:** `pdf`, `jpg`, `png`, `mp4`, `mp3`, `zip`, etc.
+
+**TODO:** there are some bugs for file formats. should be fixed later.
 
 ## Contributing
 
