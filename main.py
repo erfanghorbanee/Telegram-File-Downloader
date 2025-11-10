@@ -103,8 +103,26 @@ def list_dialogs():
             )
 
 
-def download_channel_files(
-    channel_name, file_type=None, save_directory=".", message_limit=100
+def resolve_entity(entity_identifier):
+    """
+    Convert entity identifier to proper format for Telethon.
+    Converts numeric strings to integers, keeps usernames and keywords as strings.
+
+    Args:
+        entity_identifier: Channel name, username, or numeric ID as string
+
+    Returns:
+        Integer for numeric IDs, string for usernames/keywords
+    """
+    try:
+        return int(entity_identifier)
+    except (ValueError, TypeError):
+        # Keep as string for usernames like '@channel' or 'me'
+        return entity_identifier
+
+
+def download_files_from_entity(
+    entity_identifier, file_type=None, save_directory=".", message_limit=100
 ):
     create_directory_if_needed(save_directory)
     cleanup_incomplete_files(save_directory)
@@ -113,9 +131,12 @@ def download_channel_files(
     total_files_downloaded = 0
     message_limit = None if message_limit == 0 else message_limit
 
+    # Resolve the entity (convert to int if numeric, keep as string otherwise)
+    entity = resolve_entity(entity_identifier)
+
     with telegram_client:
-        logging.info(f"Fetching messages from channel: {channel_name}")
-        messages = telegram_client.iter_messages(channel_name, limit=message_limit)
+        logging.info(f"Fetching messages from: {entity_identifier}")
+        messages = telegram_client.iter_messages(entity, limit=message_limit)
 
         for message in messages:
             if message.media:
@@ -165,13 +186,13 @@ def download_channel_files(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Download files from a Telegram channel."
+        description="Download files from a Telegram entity (channel, group, chat, or user)."
     )
     parser.add_argument(
-        "channel",
+        "entity",
         nargs="?",
         type=str,
-        help="The username or ID of the Telegram channel.",
+        help="The username or ID of the Telegram entity (channel, group, chat, or 'me' for saved messages).",
     )
     parser.add_argument(
         "-f",
@@ -205,11 +226,13 @@ if __name__ == "__main__":
     try:
         if args.list:
             list_dialogs()
-        elif args.channel:
-            download_channel_files(args.channel, args.format, args.output, args.limit)
+        elif args.entity:
+            download_files_from_entity(
+                args.entity, args.format, args.output, args.limit
+            )
         else:
             parser.error(
-                "Please specify a channel or use --list to view available dialogs (channels, groups, chats)."
+                "Please specify an entity or use --list to view available dialogs (channels, groups, chats)."
             )
     except Exception as error:
         logging.error(f"An error occurred: {error}")
