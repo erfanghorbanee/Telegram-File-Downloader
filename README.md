@@ -111,9 +111,16 @@ python main.py @channel_name --output ./downloads --limit 0
   - Public channel username: `@channel_name` or `channel_name`
   - Entity ID: `-1001234567891` (use `--list` to find IDs)
   - Saved Messages: `me` or `self`
-- `--format` or `-f`: The file type to download (e.g., `images`, `pdf`, `mp4`). If omitted, all file types are downloaded.
+- `--format` or `-f`: Filter by file type category or specific extension.
+  - **Categories:** `images`, `documents`, `videos`, `audios`, `archives`
+  - **Specific extensions:** `pdf`, `jpg`, `png`, `mp4`, `zip`, etc.
+  - If omitted, all media types are downloaded.
 - `--output` or `-o`: The directory to save downloaded files. Defaults to the current directory.
 - `--limit` or `-l`: The maximum number of messages to fetch. Use `0` to fetch **all messages**. Defaults to 100.
+
+**Note:** You can customize supported extensions for each category in the code's `FILE_CATEGORIES` dictionary.
+
+**Note:** The `--limit` parameter specifies how many messages to check, not how many files to download. For example, `--format pdf --limit 10` will check the 10 most recent messages and download any PDFs found among them.
 
 ## Security Notes
 

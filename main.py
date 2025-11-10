@@ -22,12 +22,57 @@ logging.basicConfig(
 )
 
 # Supported file categories
+# Note: These are manually curated based on common use cases.
+# Feel free to add or remove extensions as needed.
 FILE_CATEGORIES = {
-    "images": ["jpg", "jpeg", "png", "gif", "bmp"],
-    "documents": ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"],
-    "videos": ["mp4", "mkv", "avi", "mov", "wmv"],
-    "audios": ["mp3", "wav", "aac", "flac", "ogg"],
-    "archives": ["zip", "rar", "7z", "tar", "gz"],
+    "images": [
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "bmp",
+        "webp",
+        "svg",
+        "heic",
+        "raw",
+    ],
+    "documents": [
+        "pdf",
+        "doc",
+        "docx",
+        "odt",
+        "rtf",
+        "xls",
+        "xlsx",
+        "csv",
+        "ppt",
+        "pptx",
+        "txt",
+        "epub",
+    ],
+    "videos": [
+        "mp4",
+        "mkv",
+        "avi",
+        "mov",
+        "wmv",
+    ],
+    "audios": [
+        "mp3",
+        "wav",
+        "aac",
+        "flac",
+        "ogg",
+        "m4a",
+    ],
+    "archives": [
+        "zip",
+        "rar",
+        "7z",
+        "tar",
+        "gz",
+        "bz2",
+    ],
 }
 
 
@@ -198,8 +243,10 @@ if __name__ == "__main__":
         "-f",
         "--format",
         type=str,
-        help=f"The type of files to download. Supported types: {', '.join(FILE_CATEGORIES.keys())} "
-        f"or specific extensions (e.g., pdf, jpg). If not specified, downloads all media.",
+        help=f"Filter by file type category or specific extension. "
+        f"Categories: {', '.join(FILE_CATEGORIES.keys())}. "
+        f"Or use specific extensions (e.g., pdf, jpg, mp4). "
+        f"If omitted, all media types are downloaded.",
     )
     parser.add_argument(
         "-o",
@@ -213,7 +260,7 @@ if __name__ == "__main__":
         "--limit",
         type=int,
         default=100,
-        help="The maximum number of messages to fetch. Use 0 for no limit. Defaults to 100.",
+        help="Maximum number of messages to check (not files to download). Use 0 for no limit. Defaults to 100.",
     )
     parser.add_argument(
         "--list",
