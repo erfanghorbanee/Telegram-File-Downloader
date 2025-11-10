@@ -74,9 +74,9 @@ If your goal is to download files from a Telegram channel, using a user account 
 python main.py @channel_name --format images --output ./downloads --limit 100
 ```
 
-- `@channel_name`: The username or ID of the Telegram channel.
+- `@channel_name`: The username or ID of the Telegram channel. Use `me` or `self` to download from your **Saved Messages**.
 - `--format` or `-f`: The file type to download (e.g., `images`, `pdf`). If omitted, all file types are downloaded.
-- `--output` or `-o`: The directory to save the files. Defaults to the current directory.
+- `--output` or `-o`: The directory to save downloaded files. Defaults to the current directory.
 - `--limit` or `-l`: The maximum number of messages to fetch. Use `0` to fetch **all messages**.
 
 ## Security Notes
