@@ -201,7 +201,7 @@ if __name__ == "__main__":
             download_channel_files(args.channel, args.format, args.output, args.limit)
         else:
             parser.error(
-                "Please specify a channel or use --list to view available dialogs."
+                "Please specify a channel or use --list to view available dialogs (channels, groups, chats)."
             )
     except Exception as error:
         logging.error(f"An error occurred: {error}")
