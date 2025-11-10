@@ -175,3 +175,6 @@ cython_debug/
 
 # Telethon session file
 session_name.session
+
+# VS Code
+.vscode
