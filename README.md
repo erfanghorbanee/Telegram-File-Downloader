@@ -68,7 +68,7 @@ This error occurs because Telegram bots have limited API access. Bots cannot ret
 
 If your goal is to download files from a Telegram channel, using a user account (phone number login) is the most reliable option.
 
-### **Example of Running the Script**
+### **Usage**
 
 ```bash
 python main.py @channel_name --format images --output ./downloads --limit 100
