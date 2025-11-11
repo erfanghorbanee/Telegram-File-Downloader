@@ -1,5 +1,8 @@
 # Telegram-File-Downloader
 
+[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
 A Python script to download files from Telegram entities (channels, groups, chats, or saved messages). It supports filtering by file type (e.g., images, PDFs).
 
 ## Table of Contents
