@@ -163,8 +163,6 @@ You can filter by category or specific extension:
 
 **Specific extensions:** `pdf`, `jpg`, `png`, `mp4`, `mp3`, `zip`, etc.
 
-**TODO:** there are some bugs for file formats. should be fixed later.
-
 ## Contributing
 
 If you have suggestions or issues, please open an issue or pull request. All contributions are welcomed.
