@@ -34,11 +34,13 @@ A Python script to download files from Telegram entities (channels, groups, chat
 
 ## Prerequisites
 
-1. Python 3.12 or higher installed on your system.
-2. `telethon` library installed. You can install all the required libraries using:
+1. Python 3.12 or higher installed on your system (3.14 recommended).
+2. The required libraries ([Telethon](https://docs.telethon.dev/) and [python-dotenv](https://pypi.org/project/python-dotenv/)). Install them in a virtual environment:
 
    ```bash
-   pip3 install -r requirements.txt
+   python3.14 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
    ```
 
 3. A Telegram account or bot token.
