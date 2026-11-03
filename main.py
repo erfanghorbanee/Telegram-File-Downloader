@@ -1,25 +1,24 @@
 import argparse
 import logging
 import os
+import sys
 from mimetypes import guess_extension
 
 from dotenv import load_dotenv
-from telethon import TelegramClient, sync
+
+# `sync` looks unused, but importing it switches Telethon to its synchronous
+# (non-async) API, which this script relies on. Don't remove it.
+from telethon import TelegramClient, sync  # noqa: F401
 from telethon.tl.types import MessageMediaPhoto
 
 # Load environment variables from the .env file
 load_dotenv()
 
-API_ID = os.getenv("TELEGRAM_API_ID")
-API_HASH = os.getenv("TELEGRAM_API_HASH")
-
-# Initialize the Telegram client with a session name to save the session data
-telegram_client = TelegramClient("session_name", API_ID, API_HASH)
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+logger = logging.getLogger(__name__)
 
 # Supported file categories
 # Note: These are manually curated based on common use cases.
@@ -76,12 +75,29 @@ FILE_CATEGORIES = {
 }
 
 
+def create_telegram_client():
+    """Create the Telegram client, or exit with a clear message if credentials are missing."""
+    api_id = os.getenv("TELEGRAM_API_ID")
+    api_hash = os.getenv("TELEGRAM_API_HASH")
+
+    if not api_id or not api_hash:
+        sys.exit(
+            "Error: TELEGRAM_API_ID and TELEGRAM_API_HASH are not set. "
+            "See 'Setting Up the .env File' in README.md."
+        )
+    if not api_id.isdigit():
+        sys.exit("Error: TELEGRAM_API_ID must be a number. Check your .env file.")
+
+    # The session file stores your login, so you only need to sign in once.
+    return TelegramClient("session_name", int(api_id), api_hash)
+
+
 def cleanup_incomplete_files(output_dir):
     """Remove any leftover .tmp files from interrupted downloads."""
     for file in os.listdir(output_dir):
         if file.endswith(".tmp"):
             temp_file_path = os.path.join(output_dir, file)
-            logging.warning(f"Removing incomplete file: {temp_file_path}")
+            logger.warning(f"Removing incomplete file: {temp_file_path}")
             os.remove(temp_file_path)
 
 
@@ -91,12 +107,12 @@ def create_directory_if_needed(directory):
         os.makedirs(directory)
 
 
-def check_and_download_file(message, file_path):
+def check_and_download_file(telegram_client, message, file_path):
     """Downloads the file with a temporary name and renames it after completion."""
     try:
         # Skip downloading if the file already exists
         if os.path.exists(file_path):
-            logging.info(f"File already exists: {file_path}, skipping download.")
+            logger.info(f"File already exists: {file_path}, skipping download.")
             return file_path, os.path.getsize(file_path)
 
         temp_file_path = file_path + ".tmp"
@@ -111,23 +127,24 @@ def check_and_download_file(message, file_path):
             and os.path.getsize(temp_file_path) > 0
         ):
             os.rename(temp_file_path, file_path)
-            logging.info(f"Downloaded: {file_path}")
+            logger.info(f"Downloaded: {file_path}")
             return file_path, os.path.getsize(file_path)
         else:
-            logging.warning(
+            logger.warning(
                 f"Downloaded file is incomplete or missing: {temp_file_path}"
             )
             if os.path.exists(temp_file_path):
                 os.remove(temp_file_path)
-    except Exception as error:
-        logging.error(f"Failed to download file: {error}")
+    # Catch everything so one failed file doesn't stop the whole run.
+    except Exception as error:  # noqa: BLE001
+        logger.error(f"Failed to download file: {error}")
     return None, 0
 
 
-def list_dialogs():
+def list_dialogs(telegram_client):
     """List all accessible dialogs (channels, groups, chats) with their details."""
     with telegram_client:
-        logging.info("Fetching your dialogs...")
+        logger.info("Fetching your dialogs...")
         print(f"\n{'ID':<15} {'Type':<25} {'Name':<30} {'Username':<20}")
         print("-" * 90)
         for dialog in telegram_client.iter_dialogs():
@@ -167,7 +184,11 @@ def resolve_entity(entity_identifier):
 
 
 def download_files_from_entity(
-    entity_identifier, file_type=None, save_directory=".", message_limit=100
+    telegram_client,
+    entity_identifier,
+    file_type=None,
+    save_directory=".",
+    message_limit=100,
 ):
     create_directory_if_needed(save_directory)
     cleanup_incomplete_files(save_directory)
@@ -180,7 +201,7 @@ def download_files_from_entity(
     entity = resolve_entity(entity_identifier)
 
     with telegram_client:
-        logging.info(f"Fetching messages from: {entity_identifier}")
+        logger.info(f"Fetching messages from: {entity_identifier}")
         messages = telegram_client.iter_messages(entity, limit=message_limit)
 
         for message in messages:
@@ -190,7 +211,7 @@ def download_files_from_entity(
                         file_name = f"{message.id}.jpg"
                         file_path = os.path.join(save_directory, file_name)
                         downloaded_file, file_size = check_and_download_file(
-                            message, file_path
+                            telegram_client, message, file_path
                         )
                         if downloaded_file:
                             total_file_size += file_size
@@ -218,13 +239,13 @@ def download_files_from_entity(
                         or (file_extension.lstrip(".") == file_type.lower())
                     ):
                         downloaded_file, file_size = check_and_download_file(
-                            message, file_path
+                            telegram_client, message, file_path
                         )
                         if downloaded_file:
                             total_file_size += file_size
                             total_files_downloaded += 1
 
-    logging.info(
+    logger.info(
         f"\nSummary: Total files downloaded: {total_files_downloaded}, Total size: {total_file_size / (1024 * 1024):.2f} MB"
     )
 
@@ -270,16 +291,21 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if not args.list and not args.entity:
+        parser.error(
+            "Please specify an entity or use --list to view available dialogs (channels, groups, chats)."
+        )
+
+    # Created after parsing arguments, so `--help` works without credentials.
+    telegram_client = create_telegram_client()
+
     try:
         if args.list:
-            list_dialogs()
-        elif args.entity:
-            download_files_from_entity(
-                args.entity, args.format, args.output, args.limit
-            )
+            list_dialogs(telegram_client)
         else:
-            parser.error(
-                "Please specify an entity or use --list to view available dialogs (channels, groups, chats)."
+            download_files_from_entity(
+                telegram_client, args.entity, args.format, args.output, args.limit
             )
-    except Exception as error:
-        logging.error(f"An error occurred: {error}")
+    # Show a one-line message instead of a long traceback.
+    except Exception as error:  # noqa: BLE001
+        logger.error(f"An error occurred: {error}")

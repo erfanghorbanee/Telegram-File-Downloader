@@ -13,6 +13,7 @@ A Python script to download files from Telegram entities (channels, groups, chat
   - [Prerequisites](#prerequisites)
     - [Steps to Get Telegram API Credentials](#steps-to-get-telegram-api-credentials)
     - [Setting Up the .env File](#setting-up-the-env-file)
+    - [Development](#development)
   - [Usage](#usage)
     - [List All Accessible Dialogs](#list-all-accessible-dialogs)
     - [Download Files](#download-files)
@@ -68,6 +69,18 @@ To securely store your credentials:
    ```
 
    Replace `your_api_id` and `your_api_hash` with the actual values obtained from Telegram.
+
+### Development
+
+Linting and formatting use [Ruff](https://docs.astral.sh/ruff/). The version is pinned in `requirements-dev.txt`:
+
+```bash
+pip install -r requirements-dev.txt
+ruff check .
+ruff format .
+```
+
+CI runs these checks, plus a smoke test, on every push and pull request.
 
 ## Usage
 
