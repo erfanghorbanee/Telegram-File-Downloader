@@ -145,6 +145,7 @@ python main.py @channel_name --output ./downloads --limit 0
 
 ## Security Notes
 
+- Downloaded filenames are sanitized to replace OS-invalid characters and strip path traversal sequences so files always stay inside the `--output` directory (falling back to the Telegram message ID if the cleaned name is empty).
 - Avoid sharing the .env file.
 - Avoid sharing the `session_name.session` file, as it contains encrypted data that could potentially be misused to access your account.
 

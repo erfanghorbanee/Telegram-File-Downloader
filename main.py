@@ -49,12 +49,6 @@ FILE_CATEGORIES = {
         "pptx",
         "txt",
         "epub",
-        "json",
-        "xml",
-        "yaml",
-        "yml",
-        "md",
-        "log",
     ],
     "videos": [
         "mp4",
@@ -63,8 +57,6 @@ FILE_CATEGORIES = {
         "mov",
         "wmv",
         "webm",
-        "flv",
-        "m4v",
     ],
     "audios": [
         "mp3",
@@ -74,7 +66,6 @@ FILE_CATEGORIES = {
         "ogg",
         "opus",
         "m4a",
-        "wma",
     ],
     "archives": [
         "zip",
@@ -88,37 +79,18 @@ FILE_CATEGORIES = {
 }
 
 
-def sanitize_filename(filename: str) -> str:
+def sanitize_filename(filename: str, fallback: str = "unnamed_file") -> str:
     """
     Remove or replace characters that are invalid across major operating systems
-    (Windows, macOS, Linux), preventing filesystem write errors.
+    (Windows, macOS, Linux), preventing filesystem write errors and path traversal.
     """
     if not filename:
-        return "unnamed_file"
+        return str(fallback)
     cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", filename)
     cleaned = cleaned.rstrip(". ")
-    if not cleaned or not cleaned.strip("_"):
-        return "unnamed_file"
+    if not cleaned or not cleaned.strip("_."):
+        return str(fallback)
     return cleaned
-
-
-def determine_file_extension(filename: str, mime_type: str | None = None) -> str:
-    """
-    Extract the clean extension from the filename if present, or guess from mime_type.
-    Returns the extension in lowercase without a leading dot.
-    """
-    if filename and "." in filename:
-        _, ext = os.path.splitext(filename)
-        clean_ext = ext.lstrip(".").lower()
-        if clean_ext:
-            return clean_ext
-
-    if mime_type:
-        guessed = guess_extension(mime_type)
-        if guessed:
-            return guessed.lstrip(".").lower()
-
-    return ""
 
 
 def create_telegram_client():
@@ -264,15 +236,15 @@ def download_files_from_entity(
                             total_files_downloaded += 1
 
                 elif message.file:
-                    raw_name = message.file.name or str(message.id)
                     mime_type = message.file.mime_type
-                    file_extension = determine_file_extension(raw_name, mime_type)
+                    file_extension = guess_extension(mime_type) if mime_type else None
+                    if file_extension is None:
+                        file_extension = ""
 
-                    file_name = sanitize_filename(raw_name)
-                    if file_extension and not file_name.lower().endswith(
-                        f".{file_extension}"
-                    ):
-                        file_name += f".{file_extension}"
+                    raw_name = message.file.name or str(message.id)
+                    file_name = sanitize_filename(raw_name, fallback=str(message.id))
+                    if file_extension and not file_name.endswith(file_extension):
+                        file_name += file_extension
 
                     file_path = os.path.join(save_directory, file_name)
 
@@ -280,10 +252,10 @@ def download_files_from_entity(
                         not file_type
                         or (
                             file_type.lower() in FILE_CATEGORIES
-                            and file_extension
+                            and file_extension.lstrip(".")
                             in FILE_CATEGORIES.get(file_type.lower(), [])
                         )
-                        or (file_extension == file_type.lower().lstrip("."))
+                        or (file_extension.lstrip(".") == file_type.lower())
                     ):
                         downloaded_file, file_size = check_and_download_file(
                             telegram_client, message, file_path
