@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import re
 import sys
 from mimetypes import guess_extension
 
@@ -55,6 +56,7 @@ FILE_CATEGORIES = {
         "avi",
         "mov",
         "wmv",
+        "webm",
     ],
     "audios": [
         "mp3",
@@ -62,6 +64,7 @@ FILE_CATEGORIES = {
         "aac",
         "flac",
         "ogg",
+        "opus",
         "m4a",
     ],
     "archives": [
@@ -71,8 +74,23 @@ FILE_CATEGORIES = {
         "tar",
         "gz",
         "bz2",
+        "xz",
     ],
 }
+
+
+def sanitize_filename(filename: str, fallback: str = "unnamed_file") -> str:
+    """
+    Remove or replace characters that are invalid across major operating systems
+    (Windows, macOS, Linux), preventing filesystem write errors and path traversal.
+    """
+    if not filename:
+        return str(fallback)
+    cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", filename)
+    cleaned = cleaned.rstrip(". ")
+    if not cleaned or not cleaned.strip("_."):
+        return str(fallback)
+    return cleaned
 
 
 def create_telegram_client():
@@ -223,7 +241,8 @@ def download_files_from_entity(
                     if file_extension is None:
                         file_extension = ""
 
-                    file_name = message.file.name or str(message.id)
+                    raw_name = message.file.name or str(message.id)
+                    file_name = sanitize_filename(raw_name, fallback=str(message.id))
                     if file_extension and not file_name.endswith(file_extension):
                         file_name += file_extension
 
